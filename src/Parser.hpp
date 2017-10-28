@@ -2,11 +2,13 @@
 #define H_Parser
 //---------------------------------------------------------------------------
 #include <string>
+#include <iostream>
+#include <istream>
+#include <list>
 //---------------------------------------------------------------------------
 
 class Parser 
 {
-
     public:
     //Constructor
     Parser();
@@ -14,10 +16,7 @@ class Parser
     ~Parser();
     
     //Parse a string
-    void parse(const std::string& query);
-
-
-
+    void parse(std::string query);
 };
 
 #endif
