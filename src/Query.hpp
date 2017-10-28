@@ -9,8 +9,8 @@ class Query {
     public:
     Query();
     ~Query();
-    list<string> relationNames;
-    
+    std::list<std::string> relationNames;
+
 };
 
 
