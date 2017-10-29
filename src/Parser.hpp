@@ -8,6 +8,7 @@
 #include <map>
 #include <algorithm>
 #include <utility>
+#include "Query.hpp"
 #include "Database.hpp"
 //---------------------------------------------------------------------------
 
@@ -20,7 +21,7 @@ class Parser
     ~Parser();
     
     //Parse a string
-    void parse(std::string query);
+    Query parse(std::string query);
 };
 
 #endif

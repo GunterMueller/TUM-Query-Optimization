@@ -64,7 +64,7 @@ pair<string,string> splitStringToPair(string str, string delimiter){
     return result;
 }
 
-void Parser::parse(std::string query) 
+Query Parser::parse(std::string query) 
 {
     //First naive implementation
     //TODO: Restructure (move code to methods,etc.)
@@ -229,5 +229,6 @@ void Parser::parse(std::string query)
     cout << "Done: Checking condition attribute existence" << "\n";
 
     //Finally, construct query object
-
+    Query queryObj(selectionsMap,relationBindingMap,conditionMap);
+    return queryObj;
 }
