@@ -4,13 +4,18 @@
 #include <list>
 #include <string>
 
+
+
 class Query {
+
+    std::list<std::string> relationNames;
 
     public:
     Query();
     ~Query();
-    std::list<std::string> relationNames;
+    
 
+    void addRelationName(std::string name);
 };
 
 

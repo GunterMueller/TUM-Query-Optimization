@@ -83,16 +83,46 @@ void Parser::parse(std::string query)
 
     // Further parse substrings
     list<string> selectionList = splitStringToList(selectionString,",");
-
     list<string> fromList = splitStringToList(fromString,",");
-
     list<string> whereConditions= splitStringToList(query,"AND");
 
-    list<string>::iterator it = selectionList.begin();
+    //From strings to pairs/...
+    map<string,string> relationBindingMap;
+    list<string>::iterator it = fromList.begin();
+    size_t whitespacePos = 0;
+    while(it != fromList.end()) {
+        string str = *it;
 
-    while(it != selectionList.end()){
-        cout << *it << "\n";
+        //Everything to lower case
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+        whitespacePos = str.find(" ");
+        string relation = str.substr(0,whitespacePos);
+        
+        cout << relation << "\n";
+        str.erase(0,whitespacePos+1);
+        cout << str << "\n";
+        
+        //Add relation/binding pair to list
+        relationBindingMap.insert(pair<string,string>(relation,str));
+
+        //Next
         it++;
+    }
+
+
+    //Semantic checks
+    Database db;
+    db.open("data/uni");
+    //start with FROM, check tables existence
+    map<string,string>::iterator mapIt = relationBindingMap.begin();
+    while(mapIt != relationBindingMap.end()) {
+        if(!db.hasTable(mapIt->first)){
+            //Throw error
+            //For now just:
+            cout << "The table " << mapIt->first << "was not found!" << "\n";
+        }
+        mapIt++;
     }
 
 }

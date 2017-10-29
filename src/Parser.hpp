@@ -5,6 +5,10 @@
 #include <iostream>
 #include <istream>
 #include <list>
+#include <map>
+#include <algorithm>
+#include <utility>
+#include "Database.hpp"
 //---------------------------------------------------------------------------
 
 class Parser 
