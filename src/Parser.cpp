@@ -7,7 +7,7 @@ using namespace std;
 SELECT s.MatrNr, s.Name, s.Semester
 FROM Studenten s, hoeren h, Vorlesungen v, Professoren p
 WHERE s.MatrNr=h.MatrNr AND h.VorlNr=v.VorlNr AND
-v.gelesenVon=p.PersNr AND p.Name=’Curie’
+v.gelesenVon=p.PersNr AND p.Name='Curie'
 */
 
 Parser::Parser() 
@@ -29,6 +29,15 @@ string trim(string s)
     p = s.find(" ");
     if(p != string::npos && p == 0)
         s.erase(p,1);
+
+    return s;
+}
+
+string trimWhitespace(string s)
+{
+    size_t p = s.find(" ");
+    if(p != string::npos)
+        s.erase(p);
 
     return s;
 }
@@ -75,8 +84,6 @@ void Parser::parse(std::string query)
     string fromString = query.substr(0,pos);
     query.erase(0,pos + keyword.length());
 
-
-
     cout << "SELECTION: " + selectionString + "\n";
     cout << "FROM: " + fromString + "\n";
     cout << "WHERE: " + query + "\n";
@@ -88,6 +95,7 @@ void Parser::parse(std::string query)
 
     //From strings to pairs/...
     map<string,string> relationBindingMap;
+    cout << "Creating binding/relation map" << "\n";
     list<string>::iterator it = fromList.begin();
     size_t whitespacePos = 0;
     while(it != fromList.end()) {
@@ -96,33 +104,87 @@ void Parser::parse(std::string query)
         //Everything to lower case
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
+        //Split at blanks
         whitespacePos = str.find(" ");
         string relation = str.substr(0,whitespacePos);
-        
-        cout << relation << "\n";
         str.erase(0,whitespacePos+1);
-        cout << str << "\n";
-        
-        //Add relation/binding pair to list
-        relationBindingMap.insert(pair<string,string>(relation,str));
+
+        //Add binding/relation pair to list
+        relationBindingMap.insert(pair<string,string>(str,relation));
 
         //Next
         it++;
     }
+    cout << "Done: Creating binding/relation map" << "\n";
+
+    //Selection attribute/binding map
+    cout << "Creating selection map" << "\n";
+    map<string,string> selectionsMap;
+    it = selectionList.begin();
+    size_t dotPos = 0;
+    while(it != selectionList.end()) {
+        string str = *it;
+        //Split at .
+        dotPos = str.find(".");
+        string binding = str.substr(0,dotPos);
+        cout << binding << "\n";
+        str.erase(0,dotPos+1);
+        cout << str << "\n";
+        //Selection is case insensitive, transform to lowercase for consistency
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        //Also trim whitespace, just in case, but dont use our modified method
+        str = trimWhitespace(str);
+        selectionsMap.insert(pair<string,string>(str,binding));
+
+        it++;
+    }
+    cout << "Done: Creating selection map" << "\n";
 
 
-    //Semantic checks
+
+    //Semantic checks ------------------------------------------
     Database db;
     db.open("data/uni");
-    //start with FROM, check tables existence
+    //start with FROM, check table existence
     map<string,string>::iterator mapIt = relationBindingMap.begin();
+    cout << "Checking table existence" << "\n";
     while(mapIt != relationBindingMap.end()) {
-        if(!db.hasTable(mapIt->first)){
+        if(!db.hasTable(mapIt->second)){
             //Throw error
             //For now just:
-            cout << "The table " << mapIt->first << "was not found!" << "\n";
+            cout << "The table " << mapIt->second << "was not found!" << "\n";
         }
         mapIt++;
     }
+    cout << "Done: Checking table existence" << "\n";
+
+    //Using binding mapping, check for attributes
+    mapIt = selectionsMap.begin();
+    cout << "Checking selection attribute existence" << "\n";
+    while(mapIt != selectionsMap.end()) {
+
+        cout << mapIt->first << "\n";
+        Table& testTable = db.getTable(relationBindingMap[mapIt->second]);
+        
+        if(testTable.findAttribute(mapIt->first) == -1){
+            //Not found in table, throw error
+            //For now just:
+            cout << "The attribute " << mapIt->first << " was not found in table  "
+            << relationBindingMap[mapIt->second] << "!" << "\n";
+        }
+
+        mapIt++;
+    }
+    cout << "Done: Checking selection attribute existence" << "\n";
+
+
+    it = whereConditions.begin();
+    
+    while(it != whereConditions.end()) {
+        cout << *it << "\n";
+        it++;
+    }
+
+    //Finally, construct query object
 
 }
