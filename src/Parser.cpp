@@ -57,9 +57,17 @@ list<string> splitStringToList(string str, string delimiter){
     return result;
 }
 
+pair<string,string> splitStringToPair(string str, string delimiter){
+    pair<string,string> result;
+    size_t p = str.find(delimiter);
+    result = make_pair(str.substr(0,p),str.substr(p+1,str.length()));
+    return result;
+}
+
 void Parser::parse(std::string query) 
 {
     //First naive implementation
+    //TODO: Restructure (move code to methods,etc.)
 
     
     //SELECT
@@ -110,7 +118,8 @@ void Parser::parse(std::string query)
         str.erase(0,whitespacePos+1);
 
         //Add binding/relation pair to list
-        relationBindingMap.insert(pair<string,string>(str,relation));
+        cout << "Adding: '" << str << "' \\ '" << relation << "'\n";
+        relationBindingMap.insert(pair<string,string>(trimWhitespace(str),trimWhitespace(relation)));
 
         //Next
         it++;
@@ -140,7 +149,17 @@ void Parser::parse(std::string query)
     }
     cout << "Done: Creating selection map" << "\n";
 
-
+    //WHERE conditions
+    cout << "Creating condition map" << "\n";
+    map<string,string> conditionMap;
+    it = whereConditions.begin();
+    while(it != whereConditions.end()) {
+        pair<string,string> comparison = splitStringToPair(*it,"=");
+        cout << "LHS: " << comparison.first << " RHS: " << comparison.second << "\n";
+        conditionMap.insert(comparison);
+        it++;
+    }
+    cout << "Done: Creating condition map" << "\n";
 
     //Semantic checks ------------------------------------------
     Database db;
@@ -164,26 +183,50 @@ void Parser::parse(std::string query)
     while(mapIt != selectionsMap.end()) {
 
         cout << mapIt->first << "\n";
-        Table& testTable = db.getTable(relationBindingMap[mapIt->second]);
+        if(db.hasTable(relationBindingMap[mapIt->second])) {
+            Table& testTable = db.getTable(relationBindingMap[mapIt->second]);
         
-        if(testTable.findAttribute(mapIt->first) == -1){
-            //Not found in table, throw error
-            //For now just:
-            cout << "The attribute " << mapIt->first << " was not found in table  "
-            << relationBindingMap[mapIt->second] << "!" << "\n";
+            if(testTable.findAttribute(mapIt->first) == -1){
+                //Not found in table, throw error
+                //For now just:
+                cout << "The attribute " << mapIt->first << " was not found in table  "
+                << relationBindingMap[mapIt->second] << "!" << "\n";
+            }
+        } else {
+            cout << "Table: " << relationBindingMap[mapIt->second] << " not found!";
         }
 
         mapIt++;
     }
     cout << "Done: Checking selection attribute existence" << "\n";
 
+    //Check condition attributes
+    mapIt = conditionMap.begin();
+    cout << "Checking condition attribute existence" << "\n";
+    while(mapIt != conditionMap.end()) {
+        string LHS = mapIt->first;
+        string RHS = mapIt->second;
 
-    it = whereConditions.begin();
-    
-    while(it != whereConditions.end()) {
-        cout << *it << "\n";
-        it++;
+        //Binding/Attribute
+        pair<string,string> lhsBindingAttribute = splitStringToPair(LHS,".");
+        pair<string,string> rhsBindingAttribute = splitStringToPair(RHS,".");
+
+        //Resolve binding and check
+        if(!db.hasTable(relationBindingMap[lhsBindingAttribute.first])){
+            //Throw error
+            //For now
+            cout << "LHS: Table " << relationBindingMap[lhsBindingAttribute.first] << " not found!\n";
+            
+            //Exclude from check if LHS==RHS, result of split if comparison with constant
+        } else if(rhsBindingAttribute.first != rhsBindingAttribute.second && !db.hasTable(relationBindingMap[rhsBindingAttribute.first])){
+            //Throw error
+            //For now
+            cout << "RHS: Table " << relationBindingMap[rhsBindingAttribute.first] << " not found!\n";
+        }
+
+        mapIt++;
     }
+    cout << "Done: Checking condition attribute existence" << "\n";
 
     //Finally, construct query object
 
