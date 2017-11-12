@@ -56,6 +56,7 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
     auto relations = parserResult.relations;
 	auto joinConditions = parserResult.joinConditions;
 	auto selections = parserResult.selections;
+	auto projections = parserResult.projections;
 
 	for(auto it : relations) {
 		Table& rel = db->getTable(it.name);
@@ -83,6 +84,20 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 		}
 	}
 
+	for(auto pit : projections){
+
+		auto rit = std::find_if(relations.begin(), relations.end(), [pit](const SQLParser::Relation& element) {
+			return pit.relation == element.binding;
+		});
+
+		if(rit != relations.end()) {
+			Table& rel = db->getTable(rit->name);
+			unique_ptr<Tablescan> scan(new Tablescan(rel));
+			cout << "Saving: " << rit->binding + "." + pit.name << "\n";
+			const Register* attr=scan->getOutput(pit.name);
+			registerMap[(rit->binding + "." + pit.name)] = attr;
+		}
+	}
     for(auto it : relations) {
 		//Loop over all relations of the query and look for attr=const selection
 		//We care for them first, to achieve "pushed-down predicates"
@@ -177,5 +192,17 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	}
 
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
-	return begin;
+
+	//Finally: Projection ----------------------------------------------------
+
+	cout << "Now: Projection \n";
+	vector<const Register*> projectionVector;
+	for (auto proj : projections) {
+		cout << "Projecting: " << proj.relation << "." << proj.name << "\n";
+		projectionVector.push_back(registerMap[proj.relation + "." + proj.name]);
+	}
+
+	unique_ptr<Projection> project(new Projection(move(begin),{registerMap["s.name"],registerMap["s.semester"]}));
+
+	return move(project);
 }
