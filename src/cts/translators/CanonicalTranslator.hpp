@@ -5,11 +5,13 @@
 #include <sstream>
 #include <iostream>
 #include <queue>
+#include <map>
 #include "cts/parser/SQLParser.hpp"
 #include "operator/Projection.hpp"
 #include "operator/Selection.hpp"
 #include "operator/Tablescan.hpp"
 #include "operator/CrossProduct.hpp"
+#include "operator/Printer.hpp"
 #include "Database.hpp"
 //---------------------------------------------------------------------------
 /// The basic canonical translator (with pushed-down constant predicates)
@@ -24,6 +26,7 @@ class CanonicalTranslator
     SQLParser::Result parserResult;
     std::vector<std::pair<CanonicalTranslator::Type,std::unique_ptr<Operator>>> operatorVector;
     Database* db;
+    std::map<std::string,const Register*> registerMap;
 
     public:
     //Constructor

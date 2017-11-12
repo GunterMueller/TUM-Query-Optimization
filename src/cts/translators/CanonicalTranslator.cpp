@@ -61,8 +61,12 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 					break;
 			}
 			//Now select
-			cout << "Selecting for: " << hit->first.name << " " << c.getString() << "\n";
+			cout << "Selecting for: " << it.binding << "." << hit->first.name << " " << c.getString() << "\n";
 			const Register* attr=scan->getOutput(hit->first.name);
+
+			//Save all used registers
+			registerMap[(it.binding + "." + hit->first.name)] = attr;
+
 			unique_ptr<Selection> select( new Selection(move(scan),attr,&c));
 
 			//Put relation + selection in our "plan" (queue)
@@ -75,7 +79,6 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 			addOpToQueue(Type::Scan, move(scan));
 		}
 	}
-
 
 	//Now for canonical just reduce our queue via crossproduct
 	//Take first relation out and then do one cross product on top of the other
@@ -95,70 +98,95 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	}
 
 	operatorVector.push_back(make_pair(Type::CrossProduct,move(cp)));
+	cout << "Length of vector current: " << operatorVector.size() << "\n";
+
+	return move(operatorVector.back().second);
+
+	//-----------------------------------------------------------------------------------------
 
 	//Other predicates, here: join conditions
-	//cout << "Next: Other predicates from the WHERE clause \n";
-	
-	//std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::RelationAttribute>>::iterator jcIterator = joinConditions.begin();
+	cout << "Next: Other predicates from the WHERE clause \n";
+	std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::RelationAttribute>>::iterator jcIterator = joinConditions.begin();
 
 	//Resolve LHS of the predicate
-	//cout << "LHS: " << jcIterator->first.relation << "." << jcIterator->first.name << "\n";
-	//auto matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
-		//return element.binding == jcIterator->first.relation;
-	//});
-	//cout << jcIterator->first.relation << " resolved to: " << matchIt->name << "\n";
+	cout << "LHS: " << jcIterator->first.relation << "." << jcIterator->first.name << "\n";
+	auto matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
+		return element.binding == jcIterator->first.relation;
+	});
+	cout << jcIterator->first.relation << " resolved to: " << matchIt->name << "\n";
 
-	/**
-	Table& t=db.getTable("studenten");
-	unique_ptr<Tablescan> scan(new Tablescan(t));
-	const Register* attr=scan->getOutput("matrnr");
-	**/
+	// Do not use new registers!
+	// Get register from map!
+	//unique_ptr<Tablescan> scan(new Tablescan(t));
+	//const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+	//Table& t=db->getTable(matchIt->name);
+	//unique_ptr<Tablescan> scan(new Tablescan(t));
+	//const Register* attr=scan->getOutput(jcIterator->second.name);
+
+	//------------------------------------------------------------------
 
 	//Resolve RHS of the predicate
-	//cout << "RHS: " << jcIterator->second.relation << "." << jcIterator->second.name << "\n";
-	//matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
-	//	return element.binding == jcIterator->second.relation;
-	//});
-	//cout << jcIterator->second.relation << " resolved to: " << matchIt->name << "\n";
+	cout << "RHS: " << jcIterator->second.relation << "." << jcIterator->second.name << "\n";
+	matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
+		return element.binding == jcIterator->second.relation;
+	});
+	cout << jcIterator->second.relation << " resolved to: " << matchIt->name << "\n";
 
-	/**
-	Table& t2=db.getTable("hoeren");
-	unique_ptr<Tablescan> scan2(new Tablescan(t2));
-	const Register* attr2=scan2->getOutput("matrnr");
-	**/
+	//Get register from map
+	//const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
+
+	//Table& t2=db->getTable(matchIt->name);
+	//unique_ptr<Tablescan> scan2(new Tablescan(t2));
+	//const Register* attr2=scan2->getOutput(jcIterator->second.name);
+
+	//------------------------------------------------------------------
 
 	//Selection
-	//unique_ptr<Selection> select(new Selection(move(cp),attr,&two));
+	Type type = operatorVector.back().first;
+	unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
+	operatorVector.pop_back();
+	cout << "Length of vector current: " << operatorVector.size() << "\n";
+	switch(type) {
+        case Type::Selection: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
-
-
-
-
-
-
-
-
-
-
-
-	/**
-    auto firstOp = move(operatorVector.back());
-    operatorVector.pop_back();
-
-    switch(firstOp.first) {
-        case Type::Selection:
-
+				unique_ptr<Selection> op1(static_cast<Selection*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
             break;
-        case Type::Scan:
+		}
+        case Type::Scan: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
+				unique_ptr<Tablescan> op1(static_cast<Tablescan*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
             break;
-        case Type::Projection:
+		}
+        case Type::Projection: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
+				unique_ptr<Projection> op1(static_cast<Projection*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
             break;
+		}
+		case Type::CrossProduct: {
+				cout << "Selecting on cross product \n";
+
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
+
+				unique_ptr<CrossProduct> op1(dynamic_cast<CrossProduct*>(theOpPointer.get()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
+			break;
+		}
     }
-	**/
-
-
-
-    return move(operatorVector.back().second);
+	cout << "Length of vector current: " << operatorVector.size() << "\n";
+	unique_ptr<Operator> a_op = move(operatorVector.back().second);
+	return a_op;
 }
