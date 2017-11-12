@@ -65,6 +65,7 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 			const Register* attr=scan->getOutput(hit->first.name);
 
 			//Save all used registers
+			cout << "Saving: " << it.binding + "." + hit->first.name << "\n";
 			registerMap[(it.binding + "." + hit->first.name)] = attr;
 
 			unique_ptr<Selection> select( new Selection(move(scan),attr,&c));
@@ -100,7 +101,7 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	operatorVector.push_back(make_pair(Type::CrossProduct,move(cp)));
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
 
-	return move(operatorVector.back().second);
+	//return move(operatorVector.back().second);
 
 	//-----------------------------------------------------------------------------------------
 
@@ -115,14 +116,6 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	});
 	cout << jcIterator->first.relation << " resolved to: " << matchIt->name << "\n";
 
-	// Do not use new registers!
-	// Get register from map!
-	//unique_ptr<Tablescan> scan(new Tablescan(t));
-	//const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-	//Table& t=db->getTable(matchIt->name);
-	//unique_ptr<Tablescan> scan(new Tablescan(t));
-	//const Register* attr=scan->getOutput(jcIterator->second.name);
-
 	//------------------------------------------------------------------
 
 	//Resolve RHS of the predicate
@@ -132,13 +125,6 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	});
 	cout << jcIterator->second.relation << " resolved to: " << matchIt->name << "\n";
 
-	//Get register from map
-	//const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-	//Table& t2=db->getTable(matchIt->name);
-	//unique_ptr<Tablescan> scan2(new Tablescan(t2));
-	//const Register* attr2=scan2->getOutput(jcIterator->second.name);
-
 	//------------------------------------------------------------------
 
 	//Selection
@@ -146,7 +132,13 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
 	operatorVector.pop_back();
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
-	switch(type) {
+
+	cout << "Loading: " << jcIterator->first.relation + "." + jcIterator->first.name << "\n";
+	const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+	const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
+
+	unique_ptr<Selection> select(new Selection(move(theOpPointer),attr,attr2));
+	/*switch(type) {
         case Type::Selection: {
 				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
 				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
@@ -186,7 +178,13 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 			break;
 		}
     }
+	*/
+
+	Printer out(move(select));
+   	out.open();
+   	while (out.next());
+   	out.close();
+
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
-	unique_ptr<Operator> a_op = move(operatorVector.back().second);
-	return a_op;
+	//return move(select);
 }
