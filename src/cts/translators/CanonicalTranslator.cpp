@@ -17,6 +17,40 @@ void CanonicalTranslator::addOpToQueue(CanonicalTranslator::Type type, std::uniq
     operatorVector.push_back(make_pair(type,move(op)));
 }
 
+unique_ptr<Operator> CanonicalTranslator::filterWhere(unique_ptr<Operator> startOp, std::pair<SQLParser::RelationAttribute,SQLParser::RelationAttribute> joinCond,std::vector<SQLParser::Relation> relations) {
+	//Resolve LHS of the predicate
+	cout << "LHS: " << joinCond.first.relation << "." << joinCond.first.name << "\n";
+	auto matchIt = std::find_if(relations.begin(), relations.end(), [joinCond](const SQLParser::Relation& element) {
+		return element.binding == joinCond.first.relation;
+	});
+	cout << joinCond.first.relation << " resolved to: " << matchIt->name << "\n";
+
+	//------------------------------------------------------------------
+
+	//Resolve RHS of the predicate
+	cout << "RHS: " << joinCond.second.relation << "." << joinCond.second.name << "\n";
+	matchIt = std::find_if(relations.begin(), relations.end(), [joinCond](const SQLParser::Relation& element) {
+		return element.binding == joinCond.second.relation;
+	});
+	cout << joinCond.second.relation << " resolved to: " << matchIt->name << "\n";
+
+	//------------------------------------------------------------------
+
+	//Selection
+	
+	//unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
+	//operatorVector.pop_back();
+
+	cout << "Loading: " << joinCond.first.relation + "." + joinCond.first.name << "\n";
+	const Register* attr=registerMap[joinCond.first.relation + "." + joinCond.first.name];
+	const Register* attr2=registerMap[joinCond.second.relation + "." + joinCond.second.name];
+
+
+	unique_ptr<Selection> start(new Selection(move(startOp),attr,attr2));
+	return start;
+	
+}
+
 unique_ptr<Operator> CanonicalTranslator::translate() {
 
     auto relations = parserResult.relations;
@@ -132,44 +166,16 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	operatorVector.push_back(make_pair(Type::CrossProduct,move(cp)));
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
 
-	//return move(operatorVector.back().second);
-
 	//-----------------------------------------------------------------------------------------
 
 	//Other predicates, here: join conditions
 	cout << "Next: Other predicates from the WHERE clause \n";
-	std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::RelationAttribute>>::iterator jcIterator = joinConditions.begin();
+	unique_ptr<Operator> begin = move(operatorVector.back().second);
+	for (auto joinCond : joinConditions) {
+		// Move this to another method
+		begin = filterWhere(move(begin),joinCond,relations);
+	}
 
-	//Resolve LHS of the predicate
-	cout << "LHS: " << jcIterator->first.relation << "." << jcIterator->first.name << "\n";
-	auto matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
-		return element.binding == jcIterator->first.relation;
-	});
-	cout << jcIterator->first.relation << " resolved to: " << matchIt->name << "\n";
-
-	//------------------------------------------------------------------
-
-	//Resolve RHS of the predicate
-	cout << "RHS: " << jcIterator->second.relation << "." << jcIterator->second.name << "\n";
-	matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
-		return element.binding == jcIterator->second.relation;
-	});
-	cout << jcIterator->second.relation << " resolved to: " << matchIt->name << "\n";
-
-	//------------------------------------------------------------------
-
-	//Selection
-	Type type = operatorVector.back().first;
-	unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
-	operatorVector.pop_back();
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
-
-	cout << "Loading: " << jcIterator->first.relation + "." + jcIterator->first.name << "\n";
-	const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-	const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-	unique_ptr<Selection> select(new Selection(move(theOpPointer),attr,attr2));
-	
-	cout << "Length of vector current: " << operatorVector.size() << "\n";
-	return move(select);
+	return begin;
 }
