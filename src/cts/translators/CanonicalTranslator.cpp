@@ -169,53 +169,7 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
 	unique_ptr<Selection> select(new Selection(move(theOpPointer),attr,attr2));
-	/*switch(type) {
-        case Type::Selection: {
-				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-				unique_ptr<Selection> op1(static_cast<Selection*>(theOpPointer.release()));
-				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
-				addOpToQueue(Type::Selection,move(select));
-            break;
-		}
-        case Type::Scan: {
-				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-				unique_ptr<Tablescan> op1(static_cast<Tablescan*>(theOpPointer.release()));
-				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
-				addOpToQueue(Type::Selection,move(select));
-            break;
-		}
-        case Type::Projection: {
-				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-				unique_ptr<Projection> op1(static_cast<Projection*>(theOpPointer.release()));
-				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
-				addOpToQueue(Type::Selection,move(select));
-            break;
-		}
-		case Type::CrossProduct: {
-				cout << "Selecting on cross product \n";
-
-				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
-				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
-
-				unique_ptr<CrossProduct> op1(dynamic_cast<CrossProduct*>(theOpPointer.get()));
-				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
-				addOpToQueue(Type::Selection,move(select));
-			break;
-		}
-    }
-	*/
-
-	Printer out(move(select));
-   	out.open();
-   	while (out.next());
-   	out.close();
-
+	
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
-	//return move(select);
+	return move(select);
 }

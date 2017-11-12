@@ -98,6 +98,11 @@ int main(int argc, char* argv[]){
 	CanonicalTranslator translator(res, &db);
 	//Start translation, returns pointer to final operator
 	unique_ptr<Operator> translationResult = translator.translate();
-	
+
+	Printer out(move(translationResult));
+   	out.open();
+   	while (out.next());
+   	out.close();
+
 	return 0;
 }
