@@ -9,6 +9,7 @@
 #include "operator/Projection.hpp"
 #include "operator/Selection.hpp"
 #include "operator/Tablescan.hpp"
+#include "operator/CrossProduct.hpp"
 #include "Database.hpp"
 //---------------------------------------------------------------------------
 /// The basic canonical translator (with pushed-down constant predicates)
@@ -17,7 +18,7 @@ class CanonicalTranslator
 {
     public:
     /// Possible operators
-    enum class Type : unsigned { Selection, Scan, Projection};
+    enum class Type : unsigned { Selection, Scan, Projection, CrossProduct};
     
     private:
     SQLParser::Result parserResult;
