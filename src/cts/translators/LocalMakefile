@@ -1,0 +1,2 @@
+obj_translators:=					\
+	bin/cts/translators/CanonicalTranslator.o   \

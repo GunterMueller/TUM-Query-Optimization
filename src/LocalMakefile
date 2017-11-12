@@ -7,5 +7,5 @@ bin/admin$(EXEEXT): bin/Admin.o $(obj)
 	$(BUILDEXE)
 
 
-bin/isql$(EXEEXT): bin/isql.o $(obj) $(obj_sqlparser) $(obj_semana)
+bin/isql$(EXEEXT): bin/isql.o $(obj) $(obj_sqlparser) $(obj_semana) $(obj_translators)
 	$(BUILDEXE)
