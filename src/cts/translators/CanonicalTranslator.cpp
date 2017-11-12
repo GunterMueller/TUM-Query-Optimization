@@ -23,6 +23,32 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	auto joinConditions = parserResult.joinConditions;
 	auto selections = parserResult.selections;
 
+	for(auto it : relations) {
+		Table& rel = db->getTable(it.name);
+		//The scan
+		unique_ptr<Tablescan> scan(new Tablescan(rel));
+
+		auto hit = std::find_if(selections.begin(), selections.end(), [it](const std::pair<SQLParser::RelationAttribute, SQLParser::Constant>& element) {
+			return element.first.relation == it.binding;
+		});
+
+		if(hit != selections.end()) {
+			cout << "Saving: " << it.binding + "." + hit->first.name << "\n";
+			const Register* attr=scan->getOutput(hit->first.name);
+			registerMap[(it.binding + "." + hit->first.name)] = attr;
+		}
+
+		auto jit = std::find_if(joinConditions.begin(), joinConditions.end(), [it](const std::pair<SQLParser::RelationAttribute, SQLParser::RelationAttribute>& element) {
+			return element.first.relation == it.binding || element.second.relation == it.binding;
+		});
+
+		if(jit != joinConditions.end()) {
+			cout << "Saving: " << it.binding + "." + jit->first.name << "\n";
+			const Register* attr=scan->getOutput(jit->first.name);
+			registerMap[(it.binding + "." + jit->first.name)] = attr;
+		}
+	}
+
     for(auto it : relations) {
 		//Loop over all relations of the query and look for attr=const selection
 		//We care for them first, to achieve "pushed-down predicates"
@@ -62,11 +88,16 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 			}
 			//Now select
 			cout << "Selecting for: " << it.binding << "." << hit->first.name << " " << c.getString() << "\n";
-			const Register* attr=scan->getOutput(hit->first.name);
-
+			
+			
+			/*const Register* attr=scan->getOutput(hit->first.name);
 			//Save all used registers
 			cout << "Saving: " << it.binding + "." + hit->first.name << "\n";
 			registerMap[(it.binding + "." + hit->first.name)] = attr;
+			*/
+			
+			const Register* attr=registerMap[(it.binding + "." + hit->first.name)];
+
 
 			unique_ptr<Selection> select( new Selection(move(scan),attr,&c));
 
