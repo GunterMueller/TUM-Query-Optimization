@@ -7,39 +7,39 @@
 #include "Database.hpp"
 #include "cts/parser/SQLParser.hpp"
 
-struct Node{
-    //Estimated result cardinality
-    int cardinality;
-    //Selectivity
-    double selectivity;
-    //The underlying relation
-    SQLParser::Relation relation;
-    //List of predicates that can be pushed down to the relation
-    std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::Constant>> push;
+struct QueryGraphNode {
+    SQLParser::Relation relation_;
+    uint64_t cardinality_;
+    double selectivity_selections_;
+    std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::Constant>> pushed_down_;
+
+    bool operator==(const QueryGraphNode& a) const
+    {
+        return relation_.binding.compare(a.relation_.binding) == 0;
+    }
 };
 
-struct Edge{
-    //The estimated selectivity
-    double selectivity;
-    //Connection
-    Node& connection;
+struct QueryGraphEdge {
+    QueryGraphNode& connected_to_;
+    double selectivity_;
 };
 
-using QueryGraph = std::unordered_map<std::string, std::pair<Node, std::vector<Edge>>>;
-    
-QueryGraph createGraph(Database& db, const SQLParser::Result& res);    
+using QueryGraph = std::unordered_map<
+    std::string,
+    std::pair<QueryGraphNode, std::vector<QueryGraphEdge>>
+>;
+
+QueryGraph make_query_graph(Database& db, const SQLParser::Result& res);
+
 
 namespace std {
-  template <> struct hash<Node>
+  template <> struct hash<QueryGraphNode>
   {
-    size_t operator()(const Node & x) const
+    size_t operator()(const QueryGraphNode & x) const
     {
-      return hash<std::string>()(x.relation.binding);
+      return hash<std::string>()(x.relation_.binding);
     }
   };
-}	
-	
-#endif
-    
+}
 
-    
+#endif

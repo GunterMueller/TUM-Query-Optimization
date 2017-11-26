@@ -7,8 +7,8 @@ boss 0 4 100 0 0
 
 hoeren
 13
-matrnr 0 4 100 0 0
-vorlnr 0 4 100 0 0
+matrnr 0 4 6 25403 29555
+vorlnr 0 4 8 4052 5259
 
 professoren
 7
@@ -26,9 +26,9 @@ note 0 4 100 0 0
 
 studenten
 8
-matrnr 0 4 100 0 0 key
-name 3 4 100  
-semester 0 4 100 0 0
+matrnr 0 4 8 24002 29555 key
+name 3 8.875 8 Aristoxenos Xenokrates
+semester 0 4 7 2 18
 
 voraussetzen
 7

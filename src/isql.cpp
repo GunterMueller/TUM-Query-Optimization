@@ -1,111 +1,79 @@
 #include <iostream>
-#include <fstream>
 #include <sstream>
-#include <queue>
 #include "Database.hpp"
 #include "QueryGraph.hpp"
-#include "cts/parser/SQLLexer.hpp"
-#include "cts/parser/SQLParser.hpp"
 #include "cts/semana/SemanticAnalysis.hpp"
-#include "cts/translators/CanonicalTranslator.hpp"
 
-#include "operator/Tablescan.hpp"
-#include "operator/CrossProduct.hpp"
-#include "operator/Printer.hpp"
-#include "operator/Selection.hpp"
-#include "operator/Projection.hpp"
 
-using namespace std;
-
-using Token = SQLLexer::Token;
-
-string getQuery(ifstream& in){
-	ostringstream buf;
-	string line;
-	while (true){
-		getline(in, line);
-		buf << line;
-		if (!in.good()){
-			break;
-		}
-		buf << endl;
-	}
-	return buf.str();
+std::string getQuery(std::ifstream& in) {
+  std::ostringstream buf;
+  std::string line;
+  while (true) {
+    std::getline(in, line);
+    buf << line;
+    if (!in.good()) {
+      break;
+    }
+    buf << std::endl;
+  }
+  return buf.str();
 }
 
+int main(int argc, char* argv[]) {
+  if (argc < 3) {
+    std::cerr << "usage: " << argv[0] << " <db> <query file> " << std::endl;
+    return 1;
+  }
 
-void displayParserResult(SQLParser::Result& result){
-	cout << "projections: " << endl;
-	for (auto& p: result.projections){
-		cout << "  " << p.getName() << " " << endl;
-	}
+  Database db;
+  db.open(argv[1]);
+  std::ifstream input(argv[2]);
+  std::string query = getQuery(input);
+  input.close();
 
-	cout << "relations: " << endl;
-	for (auto& r: result.relations){
-		cout << "  " << r.getName() << endl;
-	}
+  SQLLexer lexer(query);
+  SQLParser parser(lexer);
 
-	cout << "join conditions: ";
-	for (auto& join: result.joinConditions){
-		cout << "  " << join.first.getName() << "=" << join.second.getName();
-	}
-	cout << endl;
+  try {
+    parser.parse();
+  } catch (std::runtime_error& e) {
+    std::cout << "exception: " << e.what() << std::endl;
+    return 1;
+  }
 
-	cout << "selections: ";
-	for (auto& sel: result.selections){
-		cout << "  " << sel.first.getName() << "=" << sel.second.value << endl;
-	}
-	cout << endl;
+  SQLParser::Result res = parser.getParserResult();
+  try {
+    SemanticAnalysis semana(db);
+    semana.analyze(res);
+  } catch (SemanticAnalysis::SemanticError& ex) {
+    std::cerr << "exception: " << ex.what() << std::endl;
+    return 1;
+  }
 
-}
+  auto graph = make_query_graph(db, res);
 
-int main(int argc, char* argv[]){
-	if (argc < 3){
-		cerr << "usage: "<<argv[0]<<" <db> <query file> "<< endl;
-		return 1;
-	}
+  std::cout << "[";
+  for (auto node : graph) {
+    std::cout << "\t{binding: " << node.second.first.relation_.binding
+              << ", card: " << node.second.first.cardinality_
+              << ", selection_slectivity: "
+              << node.second.first.selectivity_selections_
+              << ", pushed_down_selections: [" << std::endl;
 
-	Database db;
-	db.open(argv[1]);
-	ifstream input(argv[2]);
-	string query = getQuery(input);
-	input.close();
+    for (auto pred : node.second.first.pushed_down_) {
+      std::cout << "\t\t{attribute: " << pred.first.name
+                << ", value: " << pred.second.value << "}," << std::endl;
+    }
+    std::cout << "\t], neighbors: [" << std::endl;
 
-	SQLLexer lexer(query);
-	SQLParser parser(lexer);
-
-	try{
-		parser.parse();
-	}
-	catch (runtime_error& e){
-		cout << "exception: "<<e.what() << endl;
-		return 1;
-	}
-
-	SQLParser::Result res = parser.getParserResult();
-
-	//Exercise 4
-	//
-	auto graph = createGraph(db, res);
-
-	/*
-	displayParserResult(res);
-	try {
-		SemanticAnalysis semana(db);
-		semana.analyze(res);
-	}
-	catch (SemanticAnalysis::SemanticError& ex){
-		cerr << "exception: "<<ex.what() << endl;
-		return 1;
-	}
-	cout << "Semantic Analysis successful" << endl;
-
-
-	//TODO: Plug in canonical translator here
-	CanonicalTranslator translator(res, &db);
-	//Start translation, returns pointer to final operator
-	unique_ptr<Operator> translationResult = translator.translate();
-	*/
-	
-	return 0;
+    for (auto edge : node.second.second) {
+      std::cout << "\t\t{partner: " << edge.connected_to_.relation_.binding
+                << ", selectivity: " << edge.selectivity_ << ", cross_card: "
+                << edge.connected_to_.cardinality_ *
+                       node.second.first.cardinality_
+                << "}, " << std::endl;
+    }
+    std::cout << "\t]}," << std::endl;
+  }
+  std::cout << "]" << std::endl;
 }
