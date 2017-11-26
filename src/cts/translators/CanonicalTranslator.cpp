@@ -17,46 +17,11 @@ void CanonicalTranslator::addOpToQueue(CanonicalTranslator::Type type, std::uniq
     operatorVector.push_back(make_pair(type,move(op)));
 }
 
-unique_ptr<Operator> CanonicalTranslator::filterWhere(unique_ptr<Operator> startOp, std::pair<SQLParser::RelationAttribute,SQLParser::RelationAttribute> joinCond,std::vector<SQLParser::Relation> relations) {
-	//Resolve LHS of the predicate
-	cout << "LHS: " << joinCond.first.relation << "." << joinCond.first.name << "\n";
-	auto matchIt = std::find_if(relations.begin(), relations.end(), [joinCond](const SQLParser::Relation& element) {
-		return element.binding == joinCond.first.relation;
-	});
-	cout << joinCond.first.relation << " resolved to: " << matchIt->name << "\n";
-
-	//------------------------------------------------------------------
-
-	//Resolve RHS of the predicate
-	cout << "RHS: " << joinCond.second.relation << "." << joinCond.second.name << "\n";
-	matchIt = std::find_if(relations.begin(), relations.end(), [joinCond](const SQLParser::Relation& element) {
-		return element.binding == joinCond.second.relation;
-	});
-	cout << joinCond.second.relation << " resolved to: " << matchIt->name << "\n";
-
-	//------------------------------------------------------------------
-
-	//Selection
-	
-	//unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
-	//operatorVector.pop_back();
-
-	cout << "Loading: " << joinCond.first.relation + "." + joinCond.first.name << "\n";
-	const Register* attr=registerMap[joinCond.first.relation + "." + joinCond.first.name];
-	const Register* attr2=registerMap[joinCond.second.relation + "." + joinCond.second.name];
-
-
-	unique_ptr<Selection> start(new Selection(move(startOp),attr,attr2));
-	return start;
-	
-}
-
 unique_ptr<Operator> CanonicalTranslator::translate() {
 
     auto relations = parserResult.relations;
 	auto joinConditions = parserResult.joinConditions;
 	auto selections = parserResult.selections;
-	auto projections = parserResult.projections;
 
 	for(auto it : relations) {
 		Table& rel = db->getTable(it.name);
@@ -84,20 +49,6 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 		}
 	}
 
-	for(auto pit : projections){
-
-		auto rit = std::find_if(relations.begin(), relations.end(), [pit](const SQLParser::Relation& element) {
-			return pit.relation == element.binding;
-		});
-
-		if(rit != relations.end()) {
-			Table& rel = db->getTable(rit->name);
-			unique_ptr<Tablescan> scan(new Tablescan(rel));
-			cout << "Saving: " << rit->binding + "." + pit.name << "\n";
-			const Register* attr=scan->getOutput(pit.name);
-			registerMap[(rit->binding + "." + pit.name)] = attr;
-		}
-	}
     for(auto it : relations) {
 		//Loop over all relations of the query and look for attr=const selection
 		//We care for them first, to achieve "pushed-down predicates"
@@ -181,28 +132,90 @@ unique_ptr<Operator> CanonicalTranslator::translate() {
 	operatorVector.push_back(make_pair(Type::CrossProduct,move(cp)));
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
 
+	//return move(operatorVector.back().second);
+
 	//-----------------------------------------------------------------------------------------
 
 	//Other predicates, here: join conditions
 	cout << "Next: Other predicates from the WHERE clause \n";
-	unique_ptr<Operator> begin = move(operatorVector.back().second);
-	for (auto joinCond : joinConditions) {
-		// Move this to another method
-		begin = filterWhere(move(begin),joinCond,relations);
-	}
+	std::vector<std::pair<SQLParser::RelationAttribute, SQLParser::RelationAttribute>>::iterator jcIterator = joinConditions.begin();
 
+	//Resolve LHS of the predicate
+	cout << "LHS: " << jcIterator->first.relation << "." << jcIterator->first.name << "\n";
+	auto matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
+		return element.binding == jcIterator->first.relation;
+	});
+	cout << jcIterator->first.relation << " resolved to: " << matchIt->name << "\n";
+
+	//------------------------------------------------------------------
+
+	//Resolve RHS of the predicate
+	cout << "RHS: " << jcIterator->second.relation << "." << jcIterator->second.name << "\n";
+	matchIt = std::find_if(relations.begin(), relations.end(), [jcIterator](const SQLParser::Relation& element) {
+		return element.binding == jcIterator->second.relation;
+	});
+	cout << jcIterator->second.relation << " resolved to: " << matchIt->name << "\n";
+
+	//------------------------------------------------------------------
+
+	//Selection
+	Type type = operatorVector.back().first;
+	unique_ptr<Operator> theOpPointer = move(operatorVector.back().second);
+	operatorVector.pop_back();
 	cout << "Length of vector current: " << operatorVector.size() << "\n";
 
-	//Finally: Projection ----------------------------------------------------
+	cout << "Loading: " << jcIterator->first.relation + "." + jcIterator->first.name << "\n";
+	const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+	const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
-	cout << "Now: Projection \n";
-	vector<const Register*> projectionVector;
-	for (auto proj : projections) {
-		cout << "Projecting: " << proj.relation << "." << proj.name << "\n";
-		projectionVector.push_back(registerMap[proj.relation + "." + proj.name]);
-	}
+	unique_ptr<Selection> select(new Selection(move(theOpPointer),attr,attr2));
+	/*switch(type) {
+        case Type::Selection: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
-	unique_ptr<Projection> project(new Projection(move(begin),{registerMap["s.name"],registerMap["s.semester"]}));
+				unique_ptr<Selection> op1(static_cast<Selection*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
+            break;
+		}
+        case Type::Scan: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
 
-	return move(project);
+				unique_ptr<Tablescan> op1(static_cast<Tablescan*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
+            break;
+		}
+        case Type::Projection: {
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
+
+				unique_ptr<Projection> op1(static_cast<Projection*>(theOpPointer.release()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
+            break;
+		}
+		case Type::CrossProduct: {
+				cout << "Selecting on cross product \n";
+
+				const Register* attr=registerMap[jcIterator->first.relation + "." + jcIterator->first.name];
+				const Register* attr2=registerMap[jcIterator->second.relation + "." + jcIterator->second.name];
+
+				unique_ptr<CrossProduct> op1(dynamic_cast<CrossProduct*>(theOpPointer.get()));
+				unique_ptr<Selection> select(new Selection(move(op1),attr,attr2));
+				addOpToQueue(Type::Selection,move(select));
+			break;
+		}
+    }
+	*/
+
+	Printer out(move(select));
+   	out.open();
+   	while (out.next());
+   	out.close();
+
+	cout << "Length of vector current: " << operatorVector.size() << "\n";
+	//return move(select);
 }

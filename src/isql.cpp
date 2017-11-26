@@ -3,6 +3,7 @@
 #include <sstream>
 #include <queue>
 #include "Database.hpp"
+#include "QueryGraph.hpp"
 #include "cts/parser/SQLLexer.hpp"
 #include "cts/parser/SQLParser.hpp"
 #include "cts/semana/SemanticAnalysis.hpp"
@@ -82,6 +83,12 @@ int main(int argc, char* argv[]){
 	}
 
 	SQLParser::Result res = parser.getParserResult();
+
+	//Exercise 4
+	//
+	auto graph = createGraph(db, res);
+
+	/*
 	displayParserResult(res);
 	try {
 		SemanticAnalysis semana(db);
@@ -98,11 +105,7 @@ int main(int argc, char* argv[]){
 	CanonicalTranslator translator(res, &db);
 	//Start translation, returns pointer to final operator
 	unique_ptr<Operator> translationResult = translator.translate();
-
-	Printer out(move(translationResult));
-   	out.open();
-   	while (out.next());
-   	out.close();
-
+	*/
+	
 	return 0;
 }

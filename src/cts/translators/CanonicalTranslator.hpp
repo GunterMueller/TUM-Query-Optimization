@@ -39,9 +39,6 @@ class CanonicalTranslator
     
     //Translation method
     std::unique_ptr<Operator> translate();
-
-    private:
-    std::unique_ptr<Operator> filterWhere(std::unique_ptr<Operator> startOp, std::pair<SQLParser::RelationAttribute,SQLParser::RelationAttribute> joinCond,std::vector<SQLParser::Relation> relations);
 };
 //---------------------------------------------------------------------------
 #endif
