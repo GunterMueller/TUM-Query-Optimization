@@ -2,6 +2,7 @@
 #include <sstream>
 #include "Database.hpp"
 #include "QueryGraph.hpp"
+#include "GreedyOperatorOrdering.hpp"
 #include "cts/semana/SemanticAnalysis.hpp"
 
 
@@ -51,29 +52,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto graph = make_query_graph(db, res);
+  auto jt = run(graph);
 
-  std::cout << "[";
-  for (auto node : graph) {
-    std::cout << "\t{binding: " << node.second.first.relation_.binding
-              << ", card: " << node.second.first.cardinality_
-              << ", selection_slectivity: "
-              << node.second.first.selectivity_selections_
-              << ", pushed_down_selections: [" << std::endl;
-
-    for (auto pred : node.second.first.pushed_down_) {
-      std::cout << "\t\t{attribute: " << pred.first.name
-                << ", value: " << pred.second.value << "}," << std::endl;
-    }
-    std::cout << "\t], neighbors: [" << std::endl;
-
-    for (auto edge : node.second.second) {
-      std::cout << "\t\t{partner: " << edge.connected_to_.relation_.binding
-                << ", selectivity: " << edge.selectivity_ << ", cross_card: "
-                << edge.connected_to_.cardinality_ *
-                       node.second.first.cardinality_
-                << "}, " << std::endl;
-    }
-    std::cout << "\t]}," << std::endl;
-  }
-  std::cout << "]" << std::endl;
+  return 0;
 }
