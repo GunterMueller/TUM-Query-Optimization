@@ -41,6 +41,7 @@ JoinTree run(const QueryGraph& graph) {
                     leftSub = start_it;
                     rightSub = end_it;
                     std::cout << "Chose at cost: " << std::to_string(cost) << "\n";
+                    std::cout << "Joining: " << leftSub->node->relation_.name << " and " << rightSub->node->relation_.name <<"\n";
                 }
 
                 end_it++;
