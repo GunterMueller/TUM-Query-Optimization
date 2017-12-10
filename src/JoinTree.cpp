@@ -5,6 +5,14 @@ JoinTree::JoinTree(){
 
 }
 
+//"size" of the tree: number of nodes
+int JoinTree::size(){
+    if(isLeaf) {
+        return 1;
+    }
+    return rightSub->size() + leftSub->size();
+}
+
 //recursively calculate cardinality
 double JoinTree::cardinality(const QueryGraph& graph) const {
     if (isLeaf) {

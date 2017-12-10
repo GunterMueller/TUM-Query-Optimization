@@ -39,7 +39,7 @@ class JoinTree {
         std::unique_ptr<JoinTree> rightSub;
 
 
-  
+        int size();
         double cost(const QueryGraph& graph) const;
         static double cost(const QueryGraph& graph, const JoinTree& left, const JoinTree& right);
         double cardinality(const QueryGraph& graph) const;

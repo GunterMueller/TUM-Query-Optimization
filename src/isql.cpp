@@ -4,6 +4,7 @@
 #include "QueryGraph.hpp"
 #include "GreedyOperatorOrdering.hpp"
 #include "cts/semana/SemanticAnalysis.hpp"
+#include "DPAlgos.hpp"
 
 
 std::string getQuery(std::ifstream& in) {
@@ -52,7 +53,15 @@ int main(int argc, char* argv[]) {
   }
 
   auto graph = make_query_graph(db, res);
-  auto jt = run(graph);
+  //auto jt = run(graph);
+  
+  DPAlgos algo;
+  
+  auto mapJT = algo.DPsize(graph);
+
+  for(auto k : mapJT) {
+   std::cout << "Index: " << k.first << " JoinTree Object" << endl;;
+  }
 
   return 0;
 }
