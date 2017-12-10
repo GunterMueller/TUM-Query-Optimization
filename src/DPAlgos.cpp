@@ -8,15 +8,41 @@ static JoinTree CreateJoinTree(JoinTree&& left, JoinTree&& right) {
     return JoinTree(std::move(left),std::move(right));
 }
 
-//In: A set of relations (here we start from parser result)
+//In: A set of relations (we re-use the query graph that was generated, just query graph node objects instead of SQLParser::relation)
 //Out: Optimal bushy join tree
-static void DPsize(SQLParser::Result res) {
+//Note that this is not optimized in any way
+static void DPsize(QueryGraph graph) {
 
-    //Get set of relations
-    auto relations = res.relations;
+    //Get set of nodes
+    std::vector<JoinTree> R;
+    for(auto kv : graph) {
+        R.push_back(JoinTree(kv.second.first));
+    }
 
-    for (auto& rel : relations) {
-        //Set entry in DP table
+    //Number of relations is vector size
+    int n = R.size();
+
+    //We just use a set of JoinTrees as the DP table, starting with single nodes
+    //By increasing set size
+    for(int s = 2; s <= n; s++) {
+
+        //All combinatons that add up to s via pointer
+        auto it = R.begin();
+        auto it2 = R.begin();
+        it2++;
+
+        while(it != R.end()) {
+            //For first iterator
+            while(it2 != R.end()) {
+
+                //Check for = s constraint
+
+
+                it2++;
+            }
+            it++;
+        }
+
     }
 
 }
