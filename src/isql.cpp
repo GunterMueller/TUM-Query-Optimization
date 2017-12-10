@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
   auto mapJT = algo.DPsize(graph);
 
   for(auto k : mapJT) {
-   std::cout << "Index: " << k.first << " JoinTree Object" << endl;;
+   std::cout << "Index: " << k.first << " JoinTree Object" << std::endl;
   }
 
   return 0;
