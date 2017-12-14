@@ -3,7 +3,15 @@
 using namespace std;
 
 //Transformation rules
-
+//Modify directly
+//Commutativity: swap left and right sub tree of the join
+void commutativity(unique_ptr<JoinTree> join) {
+    //The swap
+    join->leftSub.swap(join->rightSub);
+    //To reduce the number of duplicates, disable T1-T3 for new tree
+    //TODO: Disable transformations
+    
+}
 
 
 
