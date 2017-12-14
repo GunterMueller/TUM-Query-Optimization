@@ -8,7 +8,8 @@ class TransformativeAlgos {
 
     public:
     JoinTree exhaustiveTrans2(QueryGraph graph);
-    void exploreClass();
+    //Replace this by "class"
+    void exploreClass(std::unique_ptr<JoinTree> treeClass);
     void applyTrans(JoinTree theTree);
 
 };
