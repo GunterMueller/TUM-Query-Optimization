@@ -1,7 +1,7 @@
 include src/operator/LocalMakefile
 include src/cts/LocalMakefile
 
-obj:=bin/Database.o bin/Register.o bin/QueryGraph.o bin/Table.o bin/Attribute.o bin/GreedyOperatorOrdering.o bin/JoinTree.o bin/DPAlgos.o $(obj_operator) 
+obj:=bin/Database.o bin/Register.o bin/QueryGraph.o bin/Table.o bin/Attribute.o bin/GreedyOperatorOrdering.o bin/JoinTree.o bin/DPAlgos.o bin/TransformativeAlgos.o bin/Memo.o $(obj_operator) 
 
 bin/admin$(EXEEXT): bin/Admin.o $(obj)
 	$(BUILDEXE)
