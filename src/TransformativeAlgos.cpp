@@ -10,9 +10,28 @@ void commutativity(unique_ptr<JoinTree> join) {
     join->leftSub.swap(join->rightSub);
     //To reduce the number of duplicates, disable T1-T3 for new tree
     //TODO: Disable transformations
-    
+
 }
 
+//Right associativity: requires on level more
+void rightAssociativity(unique_ptr<JoinTree> join) {
+    //Swap in three steps
+    join->leftSub.swap(join->rightSub);
+    join->leftSub.swap(join->rightSub->leftSub);
+    join->rightSub->leftSub.swap(join->rightSub->rightSub);
+
+    //TODO: Disable/enable transformations
+}
+
+//Left associativity: basically the same, just the other way around
+void leftAssociativity(unique_ptr<JoinTree> join){
+    //Swap
+    join->leftSub.swap(join->rightSub);
+    join->rightSub.swap(join->leftSub->rightSub);
+    join->leftSub->leftSub.swap(join->leftSub->rightSub);
+
+    //TODO: Disable/enable transformations
+}
 
 
 
