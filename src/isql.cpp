@@ -5,6 +5,7 @@
 #include "GreedyOperatorOrdering.hpp"
 #include "cts/semana/SemanticAnalysis.hpp"
 #include "DPAlgos.hpp"
+#include "TransformativeAlgos.hpp"
 
 
 std::string getQuery(std::ifstream& in) {
@@ -55,13 +56,18 @@ int main(int argc, char* argv[]) {
   auto graph = make_query_graph(db, res);
   //auto jt = run(graph);
   
+  /**
+   * Old exercise
   DPAlgos algo;
-  
   auto mapJT = algo.DPsize(graph);
-
   for(auto k : mapJT) {
    std::cout << "Index: " << k.first << " JoinTree Object" << std::endl;
   }
+  **/
+
+  //Transformative Algo
+  TransformativeAlgos algos;
+  JoinTree tree = algos.exhaustiveTrans2(graph);
 
   return 0;
 }

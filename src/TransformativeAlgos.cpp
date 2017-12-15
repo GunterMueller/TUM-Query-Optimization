@@ -39,11 +39,13 @@ void leftAssociativity(unique_ptr<JoinTree> join){
  * that makes use of the memo structure
  **/
 JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph) {
+    cout << "Starting exhaustive transformation" << endl;
     //1. Initialize MEMO
 
     //2. ExploreClass 
 
     //3. return minimal join tree from the class
+    return JoinTree();
 }
 
 /**
