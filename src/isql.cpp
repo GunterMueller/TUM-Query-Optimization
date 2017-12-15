@@ -53,6 +53,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  //Enumerate relations (this could be done earlier to save a loop)
+  //okay here for our purposes
+  int i = 1;
+  for (auto r : res.relations) {
+    r.setId(i);
+    i++;
+  }
+
   auto graph = make_query_graph(db, res);
   //auto jt = run(graph);
   

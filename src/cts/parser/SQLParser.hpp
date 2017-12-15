@@ -34,6 +34,8 @@ class SQLParser{
 
    // relation in the FROM clause
    struct Relation{
+      // id number
+      int id = 0;
       // table name
       std::string name;
       // binding
@@ -43,6 +45,10 @@ class SQLParser{
 
       std::string getName(){
          return isFullyQualified? name+ " "+binding: name;
+      }
+
+      void setId(int number) {
+          id = number;
       }
    };
 
@@ -75,6 +81,8 @@ class SQLParser{
    };
 
    Result getParserResult();
+
+   void setId(int id);
 
    private:
    Result result;
