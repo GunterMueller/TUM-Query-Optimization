@@ -67,6 +67,9 @@ int main(int argc, char* argv[]) {
 
   //Transformative Algo
   TransformativeAlgos algos;
+  //Show graph
+
+  //Apply Tranformation
   JoinTree tree = algos.exhaustiveTrans2(graph);
 
   return 0;
