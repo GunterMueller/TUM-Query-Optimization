@@ -6,7 +6,7 @@
 #include "cts/semana/SemanticAnalysis.hpp"
 #include "DPAlgos.hpp"
 #include "TransformativeAlgos.hpp"
-
+#include "Utility.hpp"
 
 std::string getQuery(std::ifstream& in) {
   std::ostringstream buf;
@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
   //Transformative Algo
   TransformativeAlgos algos;
   //Show graph
+  utility::printGraph(graph);
 
   //Apply Tranformation
   JoinTree tree = algos.exhaustiveTrans2(graph);
