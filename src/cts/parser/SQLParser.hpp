@@ -48,7 +48,7 @@ class SQLParser{
       }
 
       void setId(int number) {
-          id = number;
+          this->id = number;
       }
    };
 
