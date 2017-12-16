@@ -3,11 +3,10 @@
 
 #include <map>
 #include <utility>
-#include <set>
-#include <list>
 #include "JoinTree.hpp"
 #include "QueryGraph.hpp"
 #include "cts/parser/SQLParser.hpp"
+#include "Utility.hpp"
 
 class DPAlgos {
 
