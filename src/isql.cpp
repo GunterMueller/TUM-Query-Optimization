@@ -35,6 +35,14 @@ int main(int argc, char* argv[]) {
   input.close();
 
   SQLLexer lexer(query);
+  
+  /*while(lexer.hasNext()){
+    *lexer.getNext();
+    *std::cout << lexer.getTokenValue() << std::endl;
+  }*/ 
+
+  //return 0;
+  
   SQLParser parser(lexer);
 
   try {

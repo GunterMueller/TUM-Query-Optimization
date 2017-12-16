@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <cctype>
-#include "cts/parser/SQLLexer.hpp"
+#include "SQLLexer.hpp"
 
 using namespace std;
 
@@ -76,7 +76,7 @@ SQLLexer::Token SQLLexer::getNext(){
             --pos;
             while (pos!=input.end()) {
                char c=*pos;
-               if (isalnum(c)) {
+               if (isalnum(c) || c=='_') {
                   ++pos;
                } else break;
             }
