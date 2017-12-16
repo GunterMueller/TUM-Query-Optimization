@@ -64,22 +64,14 @@ int main(int argc, char* argv[]) {
   //Enumerate relations (this could be done earlier to save a loop)
   //okay here for our purposes
   int i = 1;
-  for (auto r : res.relations) {
+  for (auto& r : res.relations) {
     r.setId(i);
     i++;
   }
 
   auto graph = make_query_graph(db, res);
-  //auto jt = run(graph);
   
-  /**
-   * Old exercise
-  DPAlgos algo;
-  auto mapJT = algo.DPsize(graph);
-  for(auto k : mapJT) {
-   std::cout << "Index: " << k.first << " JoinTree Object" << std::endl;
-  }
-  **/
+  
 
   //Transformative Algo
   TransformativeAlgos algos;
