@@ -61,21 +61,38 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
         start[i] = i;
     }
     list<int> lt;
+
+    //Generate subsets
     auto subsets = utility::subsets(start,n,1,0,lt);
 
     for(int i = 2; i<=n;i++) {
         auto s2 = utility::subsets(start,n,i,0,lt);
         subsets.insert(s2.begin(),s2.end());
     }
+    //Done
 
-    //2. ExploreClass 
+
+    
     for (auto s : subsets) {
         cout << "{";
+        vector<int> v;
         for(int i : s) {
             cout << i+1;
+            v.push_back(i+1);
         }
+        //Generate the id for the memo class
+        uint64_t id = generateClassId(v);
+        //Create entry in memo table
+        vector<JoinTree> vec;
+        memo.insert({{id,vec}});
         cout << "}" << endl;
     }
+
+    //2. ExploreClass
+    vector<int> allRel(n);
+    iota(allRel.begin(), allRel.end(), 1);
+    exploreClass(allRel);
+
 
     //3. return minimal join tree from the class
     return JoinTree();
@@ -85,8 +102,14 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
  * The exploration method
  * Considers *all* alternatives on one class and applies transformation
 **/
-void TransformativeAlgos::exploreClass(unique_ptr<JoinTree> treeClass) {
+void TransformativeAlgos::exploreClass(vector<int> relSetId) {
 
+    cout << "Exploring class: " << endl;
+    cout << "{";
+    for (int i : relSetId) {
+        cout << i << " ";
+    }
+    cout << "}";
     //while not all trees of C have been explored
     while(0) {
         //1. choose some unexplored tree
@@ -104,8 +127,8 @@ void TransformativeAlgos::exploreClass(unique_ptr<JoinTree> treeClass) {
 void TransformativeAlgos::applyTrans(JoinTree theTree) {
 
     //1. Before doing anything, descend into child trees
-    exploreClass(std::move(theTree.leftSub));
-    exploreClass(std::move(theTree.rightSub));
+    //exploreClass(std::move(theTree.leftSub));
+    //exploreClass(std::move(theTree.rightSub));
 
     //2. for every rule and for every member of child "classes"
 

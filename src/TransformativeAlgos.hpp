@@ -8,16 +8,17 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <numeric>
 
 class TransformativeAlgos {
 
     public:
     JoinTree exhaustiveTrans2(QueryGraph graph, int numberOfRelations);
     //Replace this by "class"
-    void exploreClass(std::unique_ptr<JoinTree> treeClass);
+    void exploreClass(std::vector<int> relSetId);
     void applyTrans(JoinTree theTree);
 
-    std::unordered_map<uint64_t,JoinTree&> memo;
+    std::unordered_map<uint64_t,std::vector<JoinTree>> memo;
 
 };
 
