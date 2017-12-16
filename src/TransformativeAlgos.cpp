@@ -2,6 +2,16 @@
 
 using namespace std;
 
+uint64_t generateClassId(vector<int> relationIDs) {
+    uint64_t id = 0;
+
+    for(int i : relationIDs) {
+        id = (id << 32 | i);
+    }
+
+    return id;
+}
+
 //Transformation rules
 //Modify directly
 //Commutativity: swap left and right sub tree of the join
@@ -38,11 +48,34 @@ void leftAssociativity(unique_ptr<JoinTree> join){
 /** Implementation of the tranformative algorithm
  * that makes use of the memo structure
  **/
-JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph) {
+JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRelations) {
     cout << "Starting exhaustive transformation" << endl;
     //1. Initialize MEMO
+    cout << "Initializing memo structure " << endl;
+
+    int n = numberOfRelations;
+
+    vector<int> start(n);
+    for (int i = 1; i <= n; i++)
+    {
+        start[i] = i;
+    }
+    list<int> lt;
+    auto subsets = utility::subsets(start,n,1,0,lt);
+
+    for(int i = 2; i<=n;i++) {
+        auto s2 = utility::subsets(start,n,i,0,lt);
+        subsets.insert(s2.begin(),s2.end());
+    }
 
     //2. ExploreClass 
+    for (auto s : subsets) {
+        cout << "{";
+        for(int i : s) {
+            cout << i+1;
+        }
+        cout << "}" << endl;
+    }
 
     //3. return minimal join tree from the class
     return JoinTree();

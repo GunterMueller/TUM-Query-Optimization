@@ -70,8 +70,6 @@ int main(int argc, char* argv[]) {
   }
 
   auto graph = make_query_graph(db, res);
-  
-  
 
   //Transformative Algo
   TransformativeAlgos algos;
@@ -79,7 +77,7 @@ int main(int argc, char* argv[]) {
   utility::printGraph(graph);
 
   //Apply Tranformation
-  JoinTree tree = algos.exhaustiveTrans2(graph);
+  JoinTree tree = algos.exhaustiveTrans2(graph,res.relations.size());
 
   return 0;
 }
