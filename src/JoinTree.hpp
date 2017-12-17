@@ -13,14 +13,14 @@ class JoinTree {
     public:
         JoinTree();
         //Create from node, that's a leaf
-        JoinTree(QueryGraphNode& node) : isLeaf{true}, node{&node}, leftSub{}, rightSub{} {}
+        JoinTree(QueryGraphNode& node) : isLeaf{true}, explored{false}, commDisabled{false}, rightDisabled{false}, leftDisabled{false},node{&node}, leftSub{}, rightSub{} {}
 
         //Create from two sub trees (with move semantic)
-        JoinTree(JoinTree&& left, JoinTree&& right) : isLeaf{false}, leftSub{std::make_unique<JoinTree>(left)}, rightSub{std::make_unique<JoinTree>(right)} {}
+        JoinTree(JoinTree&& left, JoinTree&& right) : isLeaf{false}, explored{false},commDisabled{false}, rightDisabled{false}, leftDisabled{false},leftSub{std::make_unique<JoinTree>(left)}, rightSub{std::make_unique<JoinTree>(right)} {}
 
         //For creating from reference (move semantic and by ref)
-        JoinTree(JoinTree&& other) : isLeaf(other.isLeaf), node{other.node},leftSub{std::move(other.leftSub)},rightSub{std::move(other.rightSub)} {}
-        JoinTree(const JoinTree& other): isLeaf(other.isLeaf), node{nullptr}, leftSub{}, rightSub{} {
+        JoinTree(JoinTree&& other) : isLeaf(other.isLeaf), explored{other.explored}, commDisabled{other.commDisabled}, rightDisabled{other.rightDisabled}, leftDisabled{other.leftDisabled},node{other.node},leftSub{std::move(other.leftSub)},rightSub{std::move(other.rightSub)} {}
+        JoinTree(const JoinTree& other): isLeaf(other.isLeaf), explored{other.explored}, commDisabled{other.commDisabled}, rightDisabled{other.rightDisabled}, leftDisabled{other.leftDisabled}, node{nullptr}, leftSub{}, rightSub{} {
         if (isLeaf) {
             node = other.node;
         } else {
@@ -28,11 +28,17 @@ class JoinTree {
             rightSub = std::make_unique<JoinTree>(*other.rightSub);
         }
     }
+    
+        //Leaf flag
+        bool isLeaf;
         //Exploration Flag
         bool explored;
 
-        //Leaf flag
-        bool isLeaf;
+        //Transformation Flags
+        bool commDisabled;
+        bool rightDisabled;
+        bool leftDisabled;
+
         //The node content
         QueryGraphNode* node;
         //Left

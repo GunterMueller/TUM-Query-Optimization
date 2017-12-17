@@ -15,32 +15,52 @@ uint64_t generateClassId(vector<int> relationIDs) {
 //Transformation rules
 //Modify directly
 //Commutativity: swap left and right sub tree of the join
-void commutativity(unique_ptr<JoinTree> join) {
+void commutativity(JoinTree& join) {
+    if(join.commDisabled)
+        return;
     //The swap
-    join->leftSub.swap(join->rightSub);
+    join.leftSub.swap(join.rightSub);
     //To reduce the number of duplicates, disable T1-T3 for new tree
     //TODO: Disable transformations
-
+    join.commDisabled = true;
+    join.rightDisabled = true;
+    join.leftDisabled = true;
 }
 
 //Right associativity: requires on level more
-void rightAssociativity(unique_ptr<JoinTree> join) {
+void rightAssociativity(JoinTree& join) {
+    if(join.rightDisabled)
+        return;
     //Swap in three steps
-    join->leftSub.swap(join->rightSub);
-    join->leftSub.swap(join->rightSub->leftSub);
-    join->rightSub->leftSub.swap(join->rightSub->rightSub);
+    join.leftSub.swap(join.rightSub);
+    join.leftSub.swap(join.rightSub->leftSub);
+    join.rightSub->leftSub.swap(join.rightSub->rightSub);
 
     //TODO: Disable/enable transformations
+    join.leftDisabled = true;
+    join.rightDisabled = true;
+
+    join.rightSub->commDisabled = false;
+    join.rightSub->leftDisabled = false;
+    join.rightSub->rightDisabled = false;
 }
 
 //Left associativity: basically the same, just the other way around
-void leftAssociativity(unique_ptr<JoinTree> join){
+void leftAssociativity(JoinTree& join){
+    if(join.leftDisabled)
+        return;
     //Swap
-    join->leftSub.swap(join->rightSub);
-    join->rightSub.swap(join->leftSub->rightSub);
-    join->leftSub->leftSub.swap(join->leftSub->rightSub);
+    join.leftSub.swap(join.rightSub);
+    join.rightSub.swap(join.leftSub->rightSub);
+    join.leftSub->leftSub.swap(join.leftSub->rightSub);
 
     //TODO: Disable/enable transformations
+    join.leftDisabled = true;
+    join.rightDisabled = true;
+
+    join.leftSub->commDisabled = false;
+    join.leftSub->leftDisabled = false;
+    join.leftSub->rightDisabled = false;
 }
 
 
@@ -127,7 +147,14 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
 
 
     //3. return minimal join tree from the class under some cost function
-    return JoinTree();
+    auto jts = memo.find(generateClassId(allRel))->second;
+    auto minimal = jts.begin();
+    for(auto it = jts.begin();it!=jts.end();it++){
+        if(it->cost(graph) < minimal->cost(graph)) {
+            minimal = it;
+        }
+    }
+    return *minimal;
 }
 
 /**
@@ -142,16 +169,25 @@ void TransformativeAlgos::exploreClass(vector<int> relSetId) {
         cout << i << " ";
     }
     cout << "}" << endl;
-    //while not all trees of C have been explored
-    while(0) {
-        //1. choose some unexplored tree
-
-
-        //2. ApplyTransformation2
-
-        //3. Mark T as explored
+    
+    //Find class of the input
+    auto jts = memo.find(generateClassId(relSetId));
+    if(jts == memo.end()) {
+        return;
     }
+    auto theClass = jts->second;
 
+    //while not all trees of C have been explored
+    for(auto tree : theClass) {
+        //1. choose some unexplored tree
+        if(tree.explored == false) {
+            //2. ApplyTransformation2
+            cout << "Applying trans" << endl;
+            applyTrans(tree);
+            //3. Mark T as explored
+            tree.explored = true;
+        }
+    }
 }
 /**
  * Actual application of the transformations
@@ -160,14 +196,46 @@ void TransformativeAlgos::exploreClass(vector<int> relSetId) {
 void TransformativeAlgos::applyTrans(JoinTree theTree) {
 
     //1. Before doing anything, descend into child trees
-    //exploreClass(std::move(theTree.leftSub));
-    //exploreClass(std::move(theTree.rightSub));
+    //exploreClass(theTree.leftSub);
+    if(theTree.leftSub) {
+        auto rels1 = JoinTree::get_tree_relations(*theTree.leftSub);
+        vector<int> rel1IDs;
+        for (auto q : rels1){
+            rel1IDs.push_back(q.relation_.id);
+        }
+        exploreClass(rel1IDs); 
+    }
+
+    //exploreClass(theTree.rightSub);
+    if(theTree.rightSub) {
+        auto rels2 = JoinTree::get_tree_relations(*theTree.rightSub);
+        vector<int> rel2IDs;
+        for (auto q : rels2){
+            rel2IDs.push_back(q.relation_.id);
+        }
+        exploreClass(rel2IDs);
+    }
 
     //2. for every rule and for every member of child "classes"
+    auto rels = JoinTree::get_tree_relations(theTree);
+    vector<int> relIDs;
+    for (auto q : rels){
+        relIDs.push_back(q.relation_.id);
+    }
+    auto searchResult = memo.find(generateClassId(relIDs));
+    if(searchResult != memo.end()) {
+        for(auto t : searchResult->second) {
+            commutativity(t);
+            JoinTree res1 = JoinTree(t);
+            searchResult->second.push_back(res1);
 
-    //Rules are implemented as private functions
+            leftAssociativity(t);
+            JoinTree res2 = JoinTree(t);
+            searchResult->second.push_back(res2);
 
-        //3. Add every tree generated by applying a transformation to MEMO
-        // In the class we are currently in
-
+            rightAssociativity(t);
+            JoinTree res3 = JoinTree(t);
+            searchResult->second.push_back(res3);
+        }
+    }
 }
