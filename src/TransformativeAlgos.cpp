@@ -71,8 +71,7 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
     }
     //Done
 
-
-    
+  
     for (auto s : subsets) {
         cout << "{";
         vector<int> v;
@@ -84,6 +83,39 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
         uint64_t id = generateClassId(v);
         //Create entry in memo table
         vector<JoinTree> vec;
+        if(s.size() == 1) {
+            for(auto x : graph) {
+                if(x.second.first.relation_.id == *(s.begin()))
+                    vec.push_back(JoinTree(x.second.first));
+            }          
+        } else {
+            auto it = s.begin();
+            vector<unique_ptr<JoinTree>> intermediate;
+            while(it != s.end()) {
+                for (auto x : graph) {
+                    if(x.second.first.relation_.id == *it)
+                        intermediate.push_back(make_unique<JoinTree>(JoinTree(x.second.first)));
+                }
+                it++;
+            }
+
+            //Combine until one left
+            while(intermediate.size() >= 2) {
+                //cout <<  endl << "Combining at size: " << intermediate.size() << endl;
+                auto it1 = intermediate.begin();
+                auto it2 = it1 + 1;
+                auto t1 = move(*it1);
+                auto t2 = move(*it2);
+                intermediate.erase(it1);
+                intermediate.erase(it1);
+                intermediate.push_back(make_unique<JoinTree>(JoinTree(move(*t1.release()),move(*t2.release()))));
+                intermediate.shrink_to_fit();
+            }
+
+            //Combination done
+            //cout << endl << "Combinaton done " << endl;
+            vec.push_back(move(*(*intermediate.begin()).get()));
+        }
         memo.insert({{id,vec}});
         cout << "}" << endl;
     }
@@ -94,7 +126,7 @@ JoinTree TransformativeAlgos::exhaustiveTrans2(QueryGraph graph, int numberOfRel
     exploreClass(allRel);
 
 
-    //3. return minimal join tree from the class
+    //3. return minimal join tree from the class under some cost function
     return JoinTree();
 }
 
@@ -109,10 +141,11 @@ void TransformativeAlgos::exploreClass(vector<int> relSetId) {
     for (int i : relSetId) {
         cout << i << " ";
     }
-    cout << "}";
+    cout << "}" << endl;
     //while not all trees of C have been explored
     while(0) {
         //1. choose some unexplored tree
+
 
         //2. ApplyTransformation2
 

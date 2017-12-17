@@ -28,7 +28,9 @@ class JoinTree {
             rightSub = std::make_unique<JoinTree>(*other.rightSub);
         }
     }
-    
+        //Exploration Flag
+        bool explored;
+
         //Leaf flag
         bool isLeaf;
         //The node content
