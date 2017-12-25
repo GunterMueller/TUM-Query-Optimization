@@ -55,4 +55,15 @@ namespace utility {
                 return true;
         }
     }
+
+    std::vector<JoinTree> treesFromGraph(QueryGraph graph) {
+        std::vector<JoinTree> trees;
+
+        for(auto entry : graph) {
+            trees.push_back(JoinTree(entry.second.first));
+        }
+
+        return trees;
+    }
+
 }

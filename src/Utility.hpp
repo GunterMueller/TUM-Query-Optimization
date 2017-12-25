@@ -2,6 +2,7 @@
 #define H_Utility
 
 #include "QueryGraph.hpp"
+#include "JoinTree.hpp"
 #include <iostream>
 #include <vector>
 #include <set>
@@ -12,6 +13,7 @@ namespace utility {
     void subset(std::vector<int> arr, int size, int left, int index, std::list<int> &l, std::set<std::set<int> >& akku);
     std::set<std::set<int> > subsets(std::vector<int> arr, int size, int left, int index, std::list<int> &l);
     bool setIntersect(std::set<int> A, std::set<int> B);
+    std::vector<JoinTree> treesFromGraph(QueryGraph graph);
 }
 
 #endif
