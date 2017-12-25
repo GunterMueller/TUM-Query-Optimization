@@ -1,5 +1,5 @@
-#ifndef _QueryGraph_hpp
-#define _QueryGraph_hpp
+#ifndef H_QueryGraph
+#define H_QueryGraph
 
 #include <vector>
 #include <string>
