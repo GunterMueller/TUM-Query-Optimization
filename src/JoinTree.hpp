@@ -21,13 +21,13 @@ class JoinTree {
         //For creating from reference (move semantic and by ref)
         JoinTree(JoinTree&& other) : isLeaf(other.isLeaf), explored{other.explored}, commDisabled{other.commDisabled}, rightDisabled{other.rightDisabled}, leftDisabled{other.leftDisabled},node{other.node},leftSub{std::move(other.leftSub)},rightSub{std::move(other.rightSub)} {}
         JoinTree(const JoinTree& other): isLeaf(other.isLeaf), explored{other.explored}, commDisabled{other.commDisabled}, rightDisabled{other.rightDisabled}, leftDisabled{other.leftDisabled}, node{nullptr}, leftSub{}, rightSub{} {
-        if (isLeaf) {
-            node = other.node;
-        } else {
-            leftSub = std::make_unique<JoinTree>(*other.leftSub);
-            rightSub = std::make_unique<JoinTree>(*other.rightSub);
+            if (isLeaf) {
+                node = other.node;
+            } else {
+                leftSub = std::make_unique<JoinTree>(*other.leftSub);
+                rightSub = std::make_unique<JoinTree>(*other.rightSub);
+            }
         }
-    }
     
         //Leaf flag
         bool isLeaf;
