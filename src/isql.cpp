@@ -7,6 +7,7 @@
 #include "DPAlgos.hpp"
 #include "TransformativeAlgos.hpp"
 #include "Utility.hpp"
+#include "QuickPick.hpp"
 
 std::string getQuery(std::ifstream& in) {
   std::ostringstream buf;
@@ -73,11 +74,15 @@ int main(int argc, char* argv[]) {
 
   //Transformative Algo
   TransformativeAlgos algos;
+  QuickPick quick;
   //Show graph
   utility::printGraph(graph);
 
   //Apply Tranformation
-  JoinTree tree = algos.exhaustiveTrans2(graph,res.relations.size());
+  //JoinTree tree = algos.exhaustiveTrans2(graph,res.relations.size());
+
+  //Ex9
+  JoinTree tree = quick.QP(graph);
 
   return 0;
 }
