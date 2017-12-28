@@ -83,6 +83,7 @@ int main(int argc, char* argv[]) {
 
   //Ex9
   JoinTree tree = quick.QP(graph);
+  std::cout << "Cost of result tree: " << tree.cost(graph) << std::endl;
 
   return 0;
 }
