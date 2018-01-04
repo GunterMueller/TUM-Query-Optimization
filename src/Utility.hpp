@@ -13,6 +13,7 @@ namespace utility {
     void subset(std::vector<int> arr, int size, int left, int index, std::list<int> &l, std::set<std::set<int> >& akku);
     std::set<std::set<int> > subsets(std::vector<int> arr, int size, int left, int index, std::list<int> &l);
     bool setIntersect(std::set<int> A, std::set<int> B);
+    void treesFromNodes(std::vector<std::unique_ptr<JoinTree>>& trees,QueryGraph graph);
 }
 
 #endif

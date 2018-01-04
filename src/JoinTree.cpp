@@ -38,6 +38,14 @@ std::vector<QueryGraphNode> JoinTree::get_tree_relations(const JoinTree& tree) {
     return nodes;
 }
 
+bool JoinTree::containsRelation(SQLParser::Relation relation, const JoinTree& tree) {
+    for(auto x : JoinTree::get_tree_relations(tree)) {
+        if(x.relation_.name == relation.name) {
+            return true;
+        }
+    }
+    return false;
+}
 
 double JoinTree::cardinality(const QueryGraph& graph, const JoinTree& left, const JoinTree& right) {
     const auto relations_left = get_tree_relations(left);

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include "Database.hpp"
 #include "QueryGraph.hpp"
 #include "GreedyOperatorOrdering.hpp"
@@ -36,14 +37,6 @@ int main(int argc, char* argv[]) {
   input.close();
 
   SQLLexer lexer(query);
-  
-  /*while(lexer.hasNext()){
-    *lexer.getNext();
-    *std::cout << lexer.getTokenValue() << std::endl;
-  }*/ 
-
-  //return 0;
-  
   SQLParser parser(lexer);
 
   try {
@@ -71,6 +64,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto graph = make_query_graph(db, res);
+  std::vector<JoinTree> trees;
 
   //Transformative Algo
   TransformativeAlgos algos;

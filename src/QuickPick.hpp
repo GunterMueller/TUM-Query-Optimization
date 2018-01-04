@@ -11,7 +11,8 @@
 
 class QuickPick {
     public:
-    JoinTree QP(QueryGraph graph);
+    QuickPick(std::vector<JoinTree>& trees, QueryGraph& graph);
+    JoinTree QP();
 };
 
 #endif

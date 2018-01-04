@@ -53,6 +53,7 @@ class JoinTree {
         double cardinality(const QueryGraph& graph) const;
         static double cardinality(const QueryGraph& graph, const JoinTree& left, const JoinTree& right);
         static std::vector<QueryGraphNode> get_tree_relations(const JoinTree& tree);
+        static bool containsRelation(SQLParser::Relation relation, const JoinTree& tree);
 };
 
 #endif
