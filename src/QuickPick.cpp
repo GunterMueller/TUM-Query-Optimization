@@ -14,12 +14,10 @@ unique_ptr<JoinTree> findTreeForRelation(vector<unique_ptr<JoinTree>>& trees, co
             auto localptr = move(*treeIt);
             trees.erase(treeIt);
             return localptr;
-        } else {
-            return unique_ptr<JoinTree>(nullptr);
-        }
+        } 
     }
+    return unique_ptr<JoinTree>(nullptr);
 }
-
 /**
  * Implements the QuickPick Algorithm from the lecture
  * which takes a random edge in the query graph
@@ -28,12 +26,10 @@ unique_ptr<JoinTree> findTreeForRelation(vector<unique_ptr<JoinTree>>& trees, co
  * are joinend and the result tree is left. The algorithm 
  * is usually run multiple times to find a good tree
  **/
-JoinTree QuickPick::QP(QueryGraph graph) {
 
-    // The initial set of trees are just nodes of relations
-    vector<unique_ptr<JoinTree>> trees;
-    utility::treesFromNodes(trees,graph);
+unique_ptr<JoinTree> QuickPick::QP() {
 
+    //Keep track of edges
     vector<pair<QueryGraphNode*,QueryGraphNode*>> edges;
     
     //Create list of edges from the query graph
@@ -45,12 +41,18 @@ JoinTree QuickPick::QP(QueryGraph graph) {
     }
     cout << "Created edge vector" << endl;
 
+    //Create pointers for use in the algorithm
+    vector<unique_ptr<JoinTree>> treePtrs;
+    for (auto tree : trees) {
+        treePtrs.push_back(make_unique<JoinTree>(tree));
+    }
+
     // use current time as seed for random generator
     std::srand(std::time(nullptr)); 
 
     //Loop until only one tree is left: The result
-    while(trees.size() > 1) {
-
+    while(treePtrs.size() > 1) {
+        
         int randomInt = 0;
 
         //Select random element;
@@ -64,21 +66,28 @@ JoinTree QuickPick::QP(QueryGraph graph) {
         SQLParser::Relation& startRel = edge->first->relation_;
         SQLParser::Relation& endRel = edge->second->relation_;
         
+        
         //Note that this "remove" the tree from further consideration
-        unique_ptr<JoinTree> startRelTree = findTreeForRelation(trees,startRel);
+        //TODO: Check result of func
+        unique_ptr<JoinTree> startRelTree = findTreeForRelation(treePtrs,startRel);
         //In the remaining trees, we look for a matching tree for the second relation
-        unique_ptr<JoinTree> endRelTree = findTreeForRelation(trees,endRel);
+        unique_ptr<JoinTree> endRelTree = findTreeForRelation(treePtrs,endRel);
 
-        //If we don't find one, the two relations are not in different trees, if we find one, it cannot be one we already
-        //found, as we created one tree for every node in the query graph and because of the unique pointers.
-        if(endRelTree) {
-            cout << "Relations are in different trees!" << endl;
-            //Join the trees and push result to vector
-            trees.push_back(make_unique<JoinTree>(JoinTree(move(*startRelTree.release()),move(*endRelTree.release()))));
-        } else {
-            //Put back the trees, maybe another edge will consume them
-            if(startRelTree)
-                trees.push_back(move(startRelTree));
+        if(startRelTree)
+        {
+            if(endRelTree) 
+            {
+                cout << "Relations are in different trees!" << endl;
+                //Join the trees and push result to vector
+                JoinTree t = JoinTree(move(*startRelTree.get()),move(*endRelTree.get()));
+                trees.push_back(t);
+                treePtrs.push_back(make_unique<JoinTree>(t));
+            }   
+            else
+            {
+                //Put back the trees, maybe another edge will consume them
+                treePtrs.push_back(move(startRelTree));
+            }
         }
 
         //Remove used edge
@@ -90,9 +99,8 @@ JoinTree QuickPick::QP(QueryGraph graph) {
             break;
         }
 
-        cout << "Trees left: " << trees.size() << endl;
-        
+        cout << "Trees left: " << treePtrs.size() << endl;
     }
     cout << "Only one tree left or no more edges" << endl;
-    return *trees.back().get();
+    return move(treePtrs.back());
 }

@@ -56,10 +56,10 @@ namespace utility {
         }
     }
 
-    void treesFromNodes(std::vector<std::unique_ptr<JoinTree>>& trees,QueryGraph graph){
+    void treesFromNodes(std::vector<JoinTree>& trees,QueryGraph& graph){
         for(auto& x : graph) {
             std::cout << "Created tree for: " << x.second.first.relation_.name << std::endl;
-            trees.push_back(std::make_unique<JoinTree>(JoinTree(x.second.first)));
+            trees.push_back(JoinTree(x.second.first));
         }
     }
 

@@ -64,11 +64,14 @@ int main(int argc, char* argv[]) {
   }
 
   auto graph = make_query_graph(db, res);
+  //Something to hold all our join trees, we might generate, etc.
   std::vector<JoinTree> trees;
+  //Populate trees from graph
+  utility::treesFromNodes(trees,graph);
 
   //Transformative Algo
   TransformativeAlgos algos;
-  QuickPick quick;
+  QuickPick quick(trees,graph);
   //Show graph
   utility::printGraph(graph);
 
@@ -76,8 +79,8 @@ int main(int argc, char* argv[]) {
   //JoinTree tree = algos.exhaustiveTrans2(graph,res.relations.size());
 
   //Ex9
-  JoinTree tree = quick.QP(graph);
-  std::cout << "Cost of result tree: " << tree.cost(graph) << std::endl;
+  std::unique_ptr<JoinTree> t = quick.QP();
+  std::cout << "Cost of result tree: " << t.get()->cost(graph) << std::endl;
 
   return 0;
 }
