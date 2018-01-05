@@ -57,6 +57,7 @@ namespace utility {
     }
 
     void treesFromNodes(std::vector<JoinTree>& trees,QueryGraph& graph){
+        trees.clear();
         for(auto& x : graph) {
             std::cout << "Created tree for: " << x.second.first.relation_.name << std::endl;
             trees.push_back(JoinTree(x.second.first));

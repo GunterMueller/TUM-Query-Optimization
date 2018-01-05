@@ -48,7 +48,6 @@ unique_ptr<JoinTree> QuickPick::QP() {
     }
 
     // use current time as seed for random generator
-    std::srand(std::time(nullptr)); 
 
     //Loop until only one tree is left: The result
     while(treePtrs.size() > 1) {

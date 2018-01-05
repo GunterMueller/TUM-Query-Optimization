@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include "Database.hpp"
@@ -66,12 +67,9 @@ int main(int argc, char* argv[]) {
   auto graph = make_query_graph(db, res);
   //Something to hold all our join trees, we might generate, etc.
   std::vector<JoinTree> trees;
-  //Populate trees from graph
-  utility::treesFromNodes(trees,graph);
-
   //Transformative Algo
   TransformativeAlgos algos;
-  QuickPick quick(trees,graph);
+  //QuickPick quick(trees,graph);
   //Show graph
   utility::printGraph(graph);
 
@@ -79,8 +77,21 @@ int main(int argc, char* argv[]) {
   //JoinTree tree = algos.exhaustiveTrans2(graph,res.relations.size());
 
   //Ex9
-  std::unique_ptr<JoinTree> t = quick.QP();
-  std::cout << "Cost of result tree: " << t.get()->cost(graph) << std::endl;
-
+  //Run quick pick 100 times
+  std::srand(std::time(nullptr)); 
+  std::ofstream file;
+  const char* extension = ".txt";
+  file.open(strcat(argv[2],extension));
+  
+  for(int i = 0; i < 100; i++){
+    QueryGraph graph2 = graph;
+    utility::treesFromNodes(trees,graph2);
+    QuickPick quick(trees,graph2);
+    std::unique_ptr<JoinTree> t = quick.QP();
+    double cost = t.get()->cost(graph2);
+    std::cout << "Cost of result tree: " << cost << std::endl;
+    file << cost << std::endl;
+  }
+  file.close();
   return 0;
 }
