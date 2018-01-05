@@ -1,3 +1,1 @@
-select s.name, s.semester, h.matrnr
-from studenten s, hoeren h
-where s.matrnr = h.matrnr
+select s.s_suppkey from lineitem l, orders o, customer c, supplier s where l.l_orderkey=o.o_orderkey and o.o_custkey=c.c_custkey and c.c_nationkey=s.s_suppkey and c.c_name="Customer#000014993"

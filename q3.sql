@@ -1,0 +1,1 @@
+select p.p_brand from region r, nation n, supplier s, partsupp ps, part p where r.r_regionkey=n.n_regionkey and s.s_nationkey=n.n_nationkey and ps.ps_suppkey=s.s_suppkey and p.p_partkey=ps.ps_partkey and ps.ps_partkey=253
